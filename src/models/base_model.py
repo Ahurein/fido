@@ -1,9 +1,8 @@
 from datetime import datetime
-from optparse import Option
-from datetime import datetime
+from typing import Optional
 
 from pydantic import BaseModel
-from typing import Optional
+
 
 class DocumentBaseModel(BaseModel):
     created_at: Optional[datetime] = None

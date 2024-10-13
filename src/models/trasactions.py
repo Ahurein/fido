@@ -1,9 +1,8 @@
 from datetime import datetime
 from enum import Enum
-from beanie import PydanticObjectId
 
-from beanie import Indexed, Document
-from src.models.base_model import DocumentBaseModel
+from beanie import Document
+from beanie import PydanticObjectId
 
 
 class TransactionType(str, Enum):
@@ -15,7 +14,7 @@ class Transaction(Document):
     full_name: str
     transaction_date: datetime
     transaction_amount: float
-    transaction_type: str
+    transaction_type: TransactionType
 
 
     class Settings:
