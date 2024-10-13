@@ -14,16 +14,27 @@ async def get_transaction_stats(user_id: PydanticObjectId, query: TransactionSta
     if query.start_date and query.end_date:
         match["transaction_date"] = {"$gte": query.start_date, "$lte": query.end_date}
 
-    aggregate_pipeline = [
+    total_avg_pipeline = [
+        {
+            "$match": match
+        },
+        {
+            "$group": {
+                "_id": None,
+                "total_transaction": {"$sum": "$transaction_amount"},
+                "average_transaction": {"$avg": "$transaction_amount"},
+            }
+        }
+    ]
+
+    highest_day_pipeline = [
         {
             "$match": match
         },
         {
             "$group": {
                 "_id": {"day": {"$dateToString": {"format": "%Y-%m-%d", "date": "$transaction_date"}}},
-                "transaction_count": {"$sum": 1},
-                "total_transaction": {"$sum": "$transaction_amount"},
-                "average_transaction": {"$avg": "$transaction_amount"},
+                "transaction_count": {"$sum": 1}
             }
         },
         {
@@ -33,11 +44,14 @@ async def get_transaction_stats(user_id: PydanticObjectId, query: TransactionSta
             "$limit": 1
         }
     ]
-    response = await Transaction.aggregate(aggregate_pipeline).to_list()
-    if len(response) == 0:
+
+    total_avg_response = await Transaction.aggregate(total_avg_pipeline).to_list()
+    highest_day_response = await Transaction.aggregate(highest_day_pipeline).to_list()
+
+    if len(total_avg_response) == 0 or len(highest_day_response) ==0:
         return error_response("User does not have any transactions")
     return {
-        "highest_transaction_day": response[0]["_id"]["day"],
-        "average_transaction": response[0]["average_transaction"],
-        "total_transaction": response[0]["total_transaction"]
+        "highest_transaction_day": highest_day_response[0]["_id"]["day"],
+        "average_transaction": total_avg_response[0]["average_transaction"],
+        "total_transaction": total_avg_response[0]["total_transaction"]
     }
