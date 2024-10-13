@@ -14,7 +14,7 @@ class Transaction(Document):
     full_name: str
     transaction_date: datetime
     transaction_amount: float
-    transaction_type: TransactionType
+    transaction_type: str
 
 
     class Settings:
