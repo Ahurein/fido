@@ -1,7 +1,7 @@
 from motor.motor_asyncio import  AsyncIOMotorClient
 from beanie import init_beanie
 from src.core.config import config
-from src.models.trasactions import Transaction
+from src.models.transactions import Transaction
 from src.models.users import User
 
 class DbConfig:

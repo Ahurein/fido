@@ -1,6 +1,6 @@
 from src.core.redis import get_redis_value, set_redis_value
 from src.exceptions.exceptions import NotFoundException
-from src.models.trasactions import Transaction
+from src.models.transactions import Transaction
 from src.schemas.transactions_stats_query import TransactionStatsDto
 from src.services.transaction_encryption_service import TransactionEncryptionService
 from src.utils.redis_utils import get_analytics_cache_key
@@ -53,7 +53,7 @@ class AnalyticsService:
         highest_day_response = await Transaction.aggregate(highest_day_pipeline).to_list()
 
         if not total_avg_response or not highest_day_response:
-            raise NotFoundException("User does not have any transactions")
+            raise NotFoundException("User does not have any transactions or in the specified range")
 
         summary = {
             "highest_transaction_day": highest_day_response[0]["_id"]["day"],

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, confloat
 from beanie import Indexed, PydanticObjectId
-from src.models.trasactions import TransactionType
+from src.models.transactions import TransactionType
 from datetime import datetime
 
 

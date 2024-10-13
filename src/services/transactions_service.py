@@ -4,7 +4,7 @@ from beanie import PydanticObjectId
 
 from src.core.redis import get_redis_value, set_redis_value, delete_redis_value
 from src.exceptions.exceptions import NotFoundException
-from src.models.trasactions import Transaction
+from src.models.transactions import Transaction
 from src.schemas.api_response import success_response
 from src.schemas.transaction_create import TransactionCreateDto
 from src.schemas.transaction_update import TransactionUpdateDto

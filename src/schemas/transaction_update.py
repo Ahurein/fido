@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, confloat
 from typing import Optional
 
-from src.models.trasactions import TransactionType
+from src.models.transactions import TransactionType
 
 
 class TransactionUpdateDto(BaseModel):
