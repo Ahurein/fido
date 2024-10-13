@@ -1,14 +1,14 @@
 from datetime import datetime
-from urllib.request import DataHandler
-from fastapi.encoders import  jsonable_encoder
 
 from beanie import PydanticObjectId
-
-from src.schemas.api_response import ApiResponse, error_response
+from fastapi import Depends
+from src.models.trasactions import Transaction
+from src.schemas.api_response import error_response
 from src.schemas.transaction_create import TransactionCreateDto
-from src.models.trasactions import  Transaction
 from src.schemas.transaction_update import TransactionUpdateDto
 from src.services.transaction_encryption_service import TransactionEncryptionService
+from src.core.redis import get_redis, get_redis_value, set_redis_value
+from src.utils.redis_utils import get_transactions_cache_key
 
 transaction_encryption_service = TransactionEncryptionService()
 
@@ -27,13 +27,17 @@ class TransactionService:
             return error_response()
 
 
-    async def get_transactions(self, user_id: PydanticObjectId):
+    async def get_transactions(self, user_id: PydanticObjectId, redis_instance):
         try:
+            cached_data = await get_redis_value(redis_instance, get_transactions_cache_key(user_id))
+            if cached_data:
+                return cached_data
             transactions = await Transaction.find(Transaction.user_id==user_id).to_list()
-            print(len(transactions))
             decrypted_data = [transaction_encryption_service.decrypt(transaction.model_dump()) for transaction in transactions]
+            await set_redis_value(redis_instance, get_transactions_cache_key(user_id), decrypted_data, 600)
             return decrypted_data
         except Exception as e:
+            print(e)
             return error_response()
 
     async def update_transaction(self, transaction_id: PydanticObjectId, update_data: TransactionUpdateDto):

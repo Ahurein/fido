@@ -1,5 +1,4 @@
 from cryptography.fernet import Fernet
-from fastapi.encoders import jsonable_encoder
 
 from src.core.config import config
 
@@ -22,4 +21,5 @@ class TransactionEncryptionService:
             "user_id": str(data["user_id"]),
             "full_name": self.fernet.decrypt(data["full_name"].encode()).decode(),
             "transaction_type": self.fernet.decrypt(data["transaction_type"].encode()).decode(),
+            "transaction_date": data["transaction_date"].isoformat()
         }
