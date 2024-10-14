@@ -67,7 +67,7 @@ The table show the service and port it is running on
 Swagger docks url: http://localhost:8080/docs
 
 ## Running Tests
-Run the tests using this command
+Run the tests using this command. `Note`: make sure the database is running
 ```bash
 pytest
 ```
