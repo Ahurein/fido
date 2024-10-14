@@ -8,7 +8,6 @@ class DbConfig:
     @classmethod
     async def init_db(cls):
         client = AsyncIOMotorClient(config.DB_URI)
-        print("db connected")
         await init_beanie( database= client.get_database("fido"), document_models=[
             User,
             Transaction
