@@ -9,7 +9,7 @@ from src.exceptions.exceptions import NotFoundException
 class TestTransactionService:
     @pytest.mark.asyncio
     async def test_create_transaction(self, transaction_service_to_test, mock_redis_instance, mock_encryption_service,
-                                      encrypted_data, transaction_data,setup_db):
+                                      encrypted_data, transaction_data, setup_db):
         """Test creating a new transaction for a user"""
 
         mock_encryption_service.encrypt.return_value = encrypted_data
@@ -21,20 +21,25 @@ class TestTransactionService:
 
     @pytest.mark.asyncio
     async def test_when_user_id_get_user_transactions(self, transaction_service_to_test, mock_redis_instance,
-                                                      mock_encryption_service, transaction_data, transaction_two_data, decrypted_data, setup_db):
+                                                      mock_encryption_service, transaction_data, transaction_two_data,
+                                                      decrypted_data, setup_db):
         """Test the retrieval of transactions for a given user"""
 
+        page = 1
+        limit = 10
         await transaction_service_to_test.create_transaction(transaction_data, mock_redis_instance)
         await transaction_service_to_test.create_transaction(transaction_two_data, mock_redis_instance)
 
         mock_encryption_service.decrypt.return_value = decrypted_data
         mock_redis_instance.get.return_value = None
 
-        transactions = await transaction_service_to_test.get_transactions(transaction_data.user_id,
+        transactions = await transaction_service_to_test.get_transactions(transaction_data.user_id,page, limit,
                                                                           mock_redis_instance)
-        assert transactions is not None
-        assert len(transactions) == 2
-        assert transactions[0]["user_id"] == str(transaction_data.user_id)
+        assert transactions.limit == 10
+        assert transactions.page == 1
+        assert transactions.total == 2
+        assert transactions.data[0]["user_id"] == str(transaction_data.user_id)
+        assert transactions.data[0]["transaction_amount"] == transaction_data.transaction_amount
 
     @pytest.mark.asyncio
     async def test_when_transaction_id_get_transaction(self, transaction_service_to_test, mock_redis_instance,
@@ -80,7 +85,7 @@ class TestTransactionService:
 
     @pytest.mark.asyncio
     async def test_when_deleted_raise_not_found(self, transaction_service_to_test, mock_redis_instance,
-                                                mock_encryption_service,transaction_data, setup_db):
+                                                mock_encryption_service, transaction_data, setup_db):
         """Test deleting transaction by transaction id"""
 
         new_transaction = await transaction_service_to_test.create_transaction(transaction_data,
@@ -93,32 +98,42 @@ class TestTransactionService:
 
     @pytest.mark.asyncio
     async def test_when_cached_return_user_transactions(self, transaction_service_to_test, mock_redis_instance,
-                                                        mock_encryption_service, transaction_data, decrypted_data, setup_db):
+                                                        mock_encryption_service, transaction_data, decrypted_data,
+                                                        setup_db):
         """Test the retrieval of transactions for a given user from redis cache."""
-
+        page = 1
+        limit = 10
         await transaction_service_to_test.create_transaction(transaction_data, mock_redis_instance)
         await transaction_service_to_test.create_transaction(transaction_data, mock_redis_instance)
 
         mock_encryption_service.decrypt.return_value = decrypted_data
-        mock_redis_instance.get.return_value = json.dumps([
-            {
-                "user_id": str(transaction_data.user_id),
-                "full_name": transaction_data.full_name,
-                "transaction_amount": transaction_data.transaction_amount,
-                "transaction_type": transaction_data.transaction_type,
-                "transaction_date": datetime.now().isoformat()
-            }
-        ])
+        mock_redis_instance.get.return_value = json.dumps({
+            "total": 1,
+            "page": 1,
+            "limit": 10,
+            "data": [
+                {
+                    "user_id": str(transaction_data.user_id),
+                    "full_name": transaction_data.full_name,
+                    "transaction_amount": transaction_data.transaction_amount,
+                    "transaction_type": transaction_data.transaction_type,
+                    "transaction_date": datetime.now().isoformat()
+                }
+            ]
+        })
 
-        transactions = await transaction_service_to_test.get_transactions(transaction_data.user_id,
+        transactions = await transaction_service_to_test.get_transactions(transaction_data.user_id, page, limit,
                                                                           mock_redis_instance)
-        assert len(transactions) == 1
-        assert transactions[0]["user_id"] == str(transaction_data.user_id)
-        assert transactions[0]["transaction_amount"] == transaction_data.transaction_amount
+
+        assert transactions["limit"] == 10
+        assert transactions["page"] == 1
+        assert transactions["total"] == 1
+        assert transactions["data"][0]["user_id"] == str(transaction_data.user_id)
+        assert transactions["data"][0]["transaction_amount"] == transaction_data.transaction_amount
 
     @pytest.mark.asyncio
     async def test_when_id_return_transaction_entity(self, transaction_service_to_test, mock_redis_instance,
-                                                       mock_encryption_service, transaction_data, setup_db):
+                                                     mock_encryption_service, transaction_data, setup_db):
         """Test the retrieval of transaction by transaction id that return transaction entity"""
 
         new_transaction = await transaction_service_to_test.create_transaction(transaction_data,

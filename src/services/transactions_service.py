@@ -5,7 +5,7 @@ from beanie import PydanticObjectId
 from src.core.redis import get_redis_value, set_redis_value, delete_redis_value
 from src.exceptions.exceptions import NotFoundException
 from src.models.transactions import Transaction
-from src.schemas.api_response import success_response
+from src.schemas.api_response import success_response, PaginatedApiResponse
 from src.schemas.transaction_create import TransactionCreateDto
 from src.schemas.transaction_update import TransactionUpdateDto
 from src.services.transaction_encryption_service import TransactionEncryptionService
@@ -25,16 +25,19 @@ class TransactionService:
         await delete_redis_value(redis_instance, get_transactions_cache_key(transaction.user_id))
         return transaction
 
-    async def get_transactions(self, user_id: PydanticObjectId, redis_instance):
-        """ Retrieve all user transactions """
-        cached_data = await get_redis_value(redis_instance, get_transactions_cache_key(user_id))
+    async def get_transactions(self, user_id: PydanticObjectId, page, limit, redis_instance):
+        """ Retrieve a paginated list of user transactions """
+        cached_data = await get_redis_value(redis_instance, get_transactions_cache_key(user_id, page, limit))
         if cached_data:
             return cached_data
-        transactions = await Transaction.find(Transaction.user_id == user_id).to_list()
+        total_docs = await Transaction.find({"user_id": user_id}).count()
+        skip = (page - 1) * limit
+        transactions = await Transaction.find({"user_id": user_id}).skip(skip).limit(limit).to_list(limit)
         decrypted_data = [transaction_encryption_service.decrypt(transaction.model_dump()) for transaction in
                           transactions]
-        await set_redis_value(redis_instance, get_transactions_cache_key(user_id), decrypted_data, 600)
-        return decrypted_data
+        response = PaginatedApiResponse(total=total_docs, page=page, limit=limit, data=decrypted_data)
+        await set_redis_value(redis_instance, get_transactions_cache_key(user_id,page, limit), response.model_dump(), 300)
+        return response
 
     async def update_transaction(self, transaction_id: PydanticObjectId, update_data: TransactionUpdateDto, redis_instance):
         """ Update user transactions by transaction id """

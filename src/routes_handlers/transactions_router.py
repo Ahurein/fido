@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, Depends
+from fastapi import APIRouter, status, Depends, Query
 from beanie import PydanticObjectId
 
 from src.core.redis import get_redis
@@ -37,6 +37,6 @@ async def delete_transaction_by_id(transaction_id: PydanticObjectId, redis_insta
 
 
 @transactions_router.get("/user/{user_id}", status_code=status.HTTP_200_OK)
-async def get_user_transactions(user_id: PydanticObjectId, redis_instance=Depends(get_redis)):
-    transactions = await transaction_service.get_transactions(user_id, redis_instance)
+async def get_user_transactions(user_id: PydanticObjectId,page: int = Query(1, ge=1), limit: int = Query(10, ge=1), redis_instance=Depends(get_redis)):
+    transactions = await transaction_service.get_transactions(user_id,page, limit, redis_instance)
     return success_response(transactions)
