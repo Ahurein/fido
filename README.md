@@ -102,6 +102,7 @@ The use case diagram below briefly illustrate the actions a user can perform wit
 ### Scaling Strategies
 We can scale the application and improve performance by considering the strategies below:
 
+* **Index**: Indexing fields regularly used for search, sort and filtering as I've done for `user_id`
 * **Background Jobs**: Updating user statistics, alerting relevant systems, or recalculating credit scores. Using FastAPI background tasks won't be efficient with a growing user base; therefore, opting for a solution like Celery is recommended.
 * **Message Queues**: Using RabbitMQ and Kafka for an event-driven approach.
 * **Microservices**: Offloading the calculation of statistics to another service.
