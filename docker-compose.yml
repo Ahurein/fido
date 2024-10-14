@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: fido_api
     env_file:
       - .env.prod
     ports:
@@ -16,9 +17,8 @@ services:
   fido_mongodb:
     image: mongo
     container_name: fido_mongodb
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ahurein
-      MONGO_INITDB_ROOT_PASSWORD: _Password123
+    env_file:
+      - .env.prod
     ports:
       - "27017:27017"
     volumes:
