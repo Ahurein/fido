@@ -16,6 +16,7 @@ transaction_encryption_service = TransactionEncryptionService()
 
 class TransactionService:
     async def create_transaction(self, data: TransactionCreateDto, redis_instance):
+        """ Create a transaction for a user """
         payload = data.model_dump()
         payload["transaction_date"] = datetime.now()
         encrypted_data = transaction_encryption_service.encrypt(payload)
@@ -25,6 +26,7 @@ class TransactionService:
         return transaction
 
     async def get_transactions(self, user_id: PydanticObjectId, redis_instance):
+        """ Retrieve all user transactions """
         cached_data = await get_redis_value(redis_instance, get_transactions_cache_key(user_id))
         if cached_data:
             return cached_data
@@ -35,6 +37,7 @@ class TransactionService:
         return decrypted_data
 
     async def update_transaction(self, transaction_id: PydanticObjectId, update_data: TransactionUpdateDto, redis_instance):
+        """ Update user transactions by transaction id """
         transaction = await self.get_transaction_entity_by_id(transaction_id)
         decrypted_transaction = transaction_encryption_service.decrypt(transaction.model_dump())
         data = {k: v for k, v in update_data.model_dump().items() if v is not None}
@@ -46,16 +49,19 @@ class TransactionService:
         return await self.get_transaction_by_id(transaction_id)
 
     async def get_transaction_by_id(self, transaction_id: PydanticObjectId):
+        """ Get transaction by transaction id """
         transaction = await self.get_transaction_entity_by_id(transaction_id)
         return transaction_encryption_service.decrypt(transaction.model_dump())
 
     async def get_transaction_entity_by_id(self, transaction_id: PydanticObjectId):
+        """ Get transaction entity by transaction id """
         transaction = await Transaction.get(transaction_id)
         if transaction is None:
             raise NotFoundException("Transaction not found")
         return transaction
 
     async def delete_transaction_by_id(self, transaction_id: PydanticObjectId, redis_instance):
+        """ Delete transaction by transaction id """
         transaction = await self.get_transaction_entity_by_id(transaction_id)
         await Transaction.delete(transaction)
         await delete_redis_value(redis_instance, get_transactions_cache_key(transaction.user_id))

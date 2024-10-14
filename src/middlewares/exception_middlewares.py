@@ -8,6 +8,7 @@ from src.exceptions.exceptions import NotFoundException
 
 
 def add_exception_middleware(app: FastAPI):
+    """ Register custom exception middlewares """
     @app.exception_handler(NotFoundException)
     async def global_exception_handler(request: Request, ex: NotFoundException):
         return JSONResponse(

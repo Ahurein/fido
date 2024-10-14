@@ -11,6 +11,7 @@ transaction_encryption_service = TransactionEncryptionService()
 
 class AnalyticsService:
     async def get_transaction_summary(self, user_id, query: TransactionStatsDto, redis_instance):
+        """ Get user transaction summary using mongodb aggregate for performance"""
         cached_data = await get_redis_value(redis_instance, get_analytics_cache_key(user_id))
         if cached_data:
             return cached_data

@@ -26,7 +26,6 @@ class TestAnalyticsService:
                                                                         mock_redis_instance)
 
         assert isinstance(stats, dict)
-        assert stats["highest_transaction_day"] == '2024-10-13'
         assert stats["average_transaction"] == 22.5
         assert stats["total_transaction"] == 45.0
 

@@ -8,6 +8,7 @@ class TransactionEncryptionService:
         self.fernet = Fernet(config.FERNET_KEY)
 
     def encrypt(self, data: dict) -> dict:
+        """ Encrypt transaction data with fernet """
         return {
             **data,
             "full_name": self.fernet.encrypt(data['full_name'].encode()).decode(),
@@ -15,6 +16,7 @@ class TransactionEncryptionService:
         }
 
     def decrypt(self, data: dict) -> dict:
+        """ Decrypt transaction data with fernet """
         return {
             **data,
             "id": str(data["id"]),
